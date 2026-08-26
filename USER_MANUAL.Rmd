@@ -1,0 +1,502 @@
+---
+title: "ReAnote — User Manual"
+subtitle: Step-by-step guide to re-annotating genetic files, no technical
+  knowledge required
+date: "`r format(Sys.Date(), '%m/%d/%Y')`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    toc_depth: 3
+    number_sections: true
+    theme: flatly
+    highlight: tango
+    df_print: paged
+    css: manual_style.css
+  pdf_document:
+    toc: true
+    toc_depth: '3'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval = FALSE, echo = TRUE)
+```
+
+# Introduction
+
+**ReAnote** is a portable hard drive that contains everything needed to
+re-annotate (clinically interpret) genetic variant files (VCF) or process
+raw sequencing files (FASTQ) from scratch.
+
+You don't need to install any bioinformatics software. The disk already has
+everything on it. You just need to connect the disk to a Windows computer
+and follow the steps in this manual.
+
+> **Who is this manual for?** Anyone who needs to re-annotate a file, even
+> if they've never used a terminal/console before. Everything is explained
+> from scratch: what WSL is, how to open it, and the commands you'll need.
+
+---
+
+# Before you start: what do I need?
+
+- A computer running **Windows 10 or Windows 11**.
+- The ReAnote portable hard drive (via USB).
+- That computer must have **WSL** installed. If you don't know what that is
+  or whether you have it, follow the next section — it's a one-time process
+  per computer.
+
+---
+
+# Step 1 — Check or install WSL (only the first time on each computer)
+
+**WSL** (Windows Subsystem for Linux) is a Windows feature that lets you use
+a Linux-style "terminal" inside Windows. It's what we need to run ReAnote.
+If this computer has already been used with this disk before, you can skip
+directly to **Step 2**.
+
+## 1.1. Checking whether it's already installed
+
+1. Press the **Windows** key (the one with the logo, usually next to
+   `Ctrl` on the keyboard) and type **"terminal"** or **"wsl"**.
+2. If an app called **"Terminal"**, **"Command Prompt"**, or **"WSL"**
+   shows up in the results, you may already have it. Open it and type:
+
+```bash
+wsl --version
+```
+
+   - If version numbers show up → **it's already installed**, go directly
+     to **Step 2**.
+   - If you get an error saying the command doesn't exist → continue with
+     point 1.2.
+
+## 1.2. Installing WSL
+
+1. Press the **Windows** key, type **"PowerShell"**, and right-click the
+   **"Windows PowerShell"** result and choose **"Run as administrator"**.
+   Windows will ask for confirmation (a blue prompt) — accept it.
+2. In the blue/black window that opens, type exactly this and press
+   `Enter`:
+
+```powershell
+wsl --install
+```
+
+3. This step downloads and installs several things — it can take a few
+   minutes and needs an internet connection. When it's done, it may ask you
+   to **restart the computer**. Do it.
+4. After restarting, a black window may open automatically asking you to
+   create a **Linux username and password** (this is separate from your
+   Windows account). You can use whatever you like — write it down
+   somewhere, since it'll ask for it every time you open the terminal. The
+   password characters don't show up as you type, that's normal.
+
+With this, WSL is now permanently installed on that computer — you won't
+need to repeat this step unless it's a different computer.
+
+---
+
+# Step 2 — Connect the disk and open the terminal
+
+1. Connect the ReAnote portable hard drive to a USB port on the computer.
+   Wait a few seconds for Windows to recognize it (a window or notification
+   may pop up — you can close it).
+2. Find out which **letter** Windows assigned to the disk: open **File
+   Explorer** (the folder icon in the taskbar) and look under "This PC" —
+   you'll see the disk with a letter next to it, e.g. `ReAnote (F:)`. Write
+   that letter down, you'll need it in point 4.
+3. Press the **Windows** key, type **`cmd`**, and open the **"Command
+   Prompt"** app (sometimes shown as "cmd").
+4. In the black window that opens, type `wsl` and press `Enter`. The
+   window's look will change (the text before the cursor will become
+   something like `user@COMPUTER:~$`) — you're now inside the Linux
+   environment where ReAnote lives.
+
+> **Tip:** inside this window you can't paste with `Ctrl+V` like you
+> normally would in Windows. To paste copied text, **right-click** inside
+> the window, or use `Ctrl+Shift+V`.
+
+## 2.1. Moving into the drives folder and checking the disk
+
+Type:
+
+```bash
+cd /mnt/
+ls
+```
+
+You should see a letter matching (in lowercase) the one you noted from
+Windows File Explorer — for example, if it was `F:` in Windows, you should
+see a folder called `f` here. Check it by going into it:
+
+```bash
+ls /mnt/f
+```
+
+- **If you see files like `reanotar.sh`, `README.md`, `data`, `engine`...**
+  → great, the disk is already accessible. Skip point 2.2 and go directly
+  to **Step 3**.
+- **If the folder is empty, gives an error, or that letter doesn't show up
+  at all under `/mnt/`** → this is a common case: WSL doesn't always "see"
+  the disk automatically even though Windows shows it. Continue with
+  point 2.2.
+
+## 2.2. If the disk doesn't show up on its own: mount it manually
+
+This is normal and doesn't mean anything is broken. Run (replacing `F`
+with the real letter you saw in Windows File Explorer, and `f` with the
+same letter in lowercase):
+
+```bash
+sudo mount -t drvfs F: /mnt/f
+```
+
+It will ask for the Linux password you created in Step 1 (you won't see
+what you type, that's normal). After that, check again that the contents
+show up:
+
+```bash
+ls /mnt/f
+```
+
+Now you should see `reanotar.sh`, `README.md`, etc. This mount command
+**needs to be repeated every time you reopen the terminal**, if the disk
+doesn't show up on its own under `/mnt/` that day (repeating it when it's
+not needed doesn't cause any harm).
+
+---
+
+# Step 3 — Go into the ReAnote folder
+
+Type (changing `f` if your letter is different):
+
+```bash
+cd /mnt/f/ReAnote
+```
+
+And confirm you're in the right place:
+
+```bash
+ls
+```
+
+You should see, among other things, a file called `reanotar.sh` — that's
+the program you'll use for everything. From here on, **every command in
+this manual runs from inside this folder**. If you close the terminal and
+reopen it, you'll need to repeat Step 2 (including the manual mount if it's
+needed again that day) and this `cd` again.
+
+---
+
+# Step 4 — (Recommended, only the first time) Speed up the first load
+
+This step is optional but highly recommended — it makes the first time you
+use the program on each computer nearly instant instead of taking several
+minutes. It only needs to be done **once per computer**.
+
+```bash
+sudo apt update
+sudo apt install -y squashfuse
+```
+
+It will ask for the Linux password you created in Step 1 (the characters
+don't show up as you type, that's normal). If you skip this step, the
+program works exactly the same, it'll just take longer to get ready the
+first time you use it on that machine.
+
+---
+
+# Step 5 — Using the graphical panel (recommended, easier)
+
+Everything explained further below with commands can also be done without
+typing anything in the terminal, from a **window with fields and buttons**
+like any normal Windows program. This is the recommended way for anyone not
+comfortable with the terminal — internally it does exactly the same thing,
+just by filling out a form instead of typing the command by hand.
+
+## 5.1. Opening the panel
+
+1. Connect the disk and, if it's the first time on that computer, follow
+   **Step 1** (installing WSL) just as if you were going to use the
+   terminal — the graphical panel also needs WSL underneath.
+2. Open **Windows File Explorer** and go into the `ReAnote` folder on the
+   disk (whatever letter it got assigned, e.g. `F:`).
+3. **Double-click `Open_ReAnote.bat`**.
+
+> **Nothing happens when you double-click, or Windows shows a blue
+> "Windows protected your PC" warning?** That's the normal SmartScreen
+> warning for any script that isn't digitally signed — it's not a virus,
+> it's yours. Click **"More info"** and then **"Run anyway"**. This only
+> happens the first time.
+
+After a few seconds, a window called **"ReAnote — Variant
+re-annotation"** opens.
+
+## 5.2. Filling out the form
+
+1. **Sequencing type** (`wgs`/`wes`) — the small dropdown at the top of the
+   window, next to the disk letter notice. It's **only used** when the mode
+   is "full FASTQ" or "BAM → gVCF only": pick `wgs` for a whole genome, or
+   `wes` for an exome. For any other mode it's grayed out, since the
+   sequencing type was already fixed in an earlier step.
+2. **"What do you have?"** — a dropdown with the same options as the
+   commands further below (VCF in hg38, VCF in hg19, full FASTQ), and,
+   further down the list, the option to launch **a single step** on its
+   own (for example, if you only have a BAM and want to jump straight to
+   variant calling, without repeating the alignment).
+3. **Input file or folder** — click "Browse..." and find your
+   file/folder wherever you have it saved on your computer. **You don't
+   need to copy it into the disk's `input` folder first**, unlike the
+   command-based method — the panel accepts any location directly.
+4. **Sample name** — the identifier you want to use to name the output
+   files.
+5. **Associated BAM** (optional, or required if the mode is "VEP only") —
+   only needed if you want to apply phasing with WhatsHap.
+6. **Regions BED file** — only appears enabled if you picked `wes` above.
+   **Required** in that case (VEP needs to know which regions to restrict
+   the analysis to for an exome); ask the sequencing lab for it if you
+   don't have it. Left disabled and ignored for `wgs`.
+7. **Output folder** (optional) — if you leave it blank, the result is
+   saved on the disk (`outputs\`), same as with the commands. If you'd
+   rather save it directly somewhere else on your computer (e.g. your
+   desktop), click "Browse..." and pick it — this saves you from having
+   to copy the files afterward.
+
+The **"Command that will run"** box shows you at all times, as text, what
+the program is going to do — it's exactly the same command explained in
+the following sections of this manual, generated automatically from what
+you've filled in.
+
+## 5.3. Launching and following the process
+
+1. Click the blue **"Start"** button. A notice summarizing the command
+   will appear — confirm to launch it.
+2. A separate terminal window will open showing live progress. **You can
+   close that terminal window without worry**: the process keeps running
+   in the background regardless, it's not interrupted.
+3. In the main window a **progress bar** appears that fills up as the
+   process moves through its steps, along with a status text below the
+   buttons.
+4. If you closed the progress terminal window (or closed it by mistake
+   and want to see it again), click **"View log"** to reopen it at any
+   time — it works even if the process has already finished, showing you
+   the full result exactly as it ended.
+5. If you made a mistake with some data and want to stop it, click
+   **"Cancel"** — it will ask for confirmation and stop the process
+   entirely (not just the window), so you can fix the data and relaunch
+   it.
+
+> **What if I accidentally close the entire panel window (not just the
+> progress one)?** The process keeps running on the disk regardless. If
+> you reopen `Open_ReAnote.bat`, the panel automatically detects that a
+> previous process is still running and reactivates the "View log" and
+> "Cancel" buttons pointing at it — you don't lose control over what was
+> already running.
+
+When it finishes, a notice will automatically appear indicating whether the
+process **finished successfully** or **stopped early** (which usually
+means it failed) — in that second case, click "View log" to review the
+error details.
+
+---
+
+# Step 6 — Re-annotating your file via commands (advanced alternative)
+
+This section explains how to do exactly the same thing as the graphical
+panel from Step 5, but by typing the commands by hand in the terminal. You
+only need this if you prefer the terminal or want to understand what the
+panel does underneath — if the graphical panel already worked for you, you
+can skip directly to **Step 7**.
+
+ReAnote has **three ways to use it**, depending on the type of file you
+have. Find your case in the table and go to the matching section.
+
+| I have... | I use the command | Section |
+|---|---|---|
+| A VCF file already in hg38 format (current human genome) | `annotate` | [6.1](#annotate) |
+| A VCF file in hg19/hg37 format (older) | `liftover` | [6.2](#liftover) |
+| FASTQ files (raw, unprocessed sequencing data) | `full` | [6.3](#full) |
+
+> **Not sure what format your file is in?** Ask whoever gave it to you, or
+> check with the sequencing lab — it's usually indicated in the file name
+> or in the documentation that comes with the sample.
+
+## 6.1. I have a VCF in hg38 {#annotate}
+
+### First things first: put your file in the right folder
+
+Copy your VCF file (ending in `.vcf` or `.vcf.gz`) into the ReAnote disk's
+`input` folder. You can do this directly from **Windows File Explorer**:
+open the disk (the letter you found in Step 2.1, e.g. `F:`), go into the
+`ReAnote\input` folder, and paste your file there with normal Windows
+copy-paste.
+
+### The command
+
+Replace `MY_FILE.vcf.gz` with your file's real name, and `SampleName` with
+whatever name you want to give the sample (e.g. the patient's identifier):
+
+```bash
+./reanotar.sh annotate -i input/MY_FILE.vcf.gz -o outputs/SampleName_annotated -s SampleName
+```
+
+### What each part means
+
+- `-i` → the file you want to re-annotate (inside `input/`).
+- `-o` → where the result will be saved (created automatically).
+- `-s` → the sample name, used to identify the output files.
+
+### Real example
+
+```bash
+./reanotar.sh annotate -i input/AY0167.vcf.gz -o outputs/AY0167_annotated -s AY0167
+```
+
+## 6.2. I have a VCF in hg19/hg37 {#liftover}
+
+Same as the previous case, but using the word `liftover` instead of
+`annotate`. The program first converts the coordinates to the current
+format (hg38) and then re-annotates.
+
+```bash
+./reanotar.sh liftover -i input/MY_FILE.vcf.gz -o outputs/SampleName_liftover -s SampleName
+```
+
+## 6.3. I have FASTQ files (raw sequencing data) {#full}
+
+This is the longest process — it can take **several hours**, depending on
+the size of the data. It processes the data from the very beginning:
+alignment, variant detection, filtering, and re-annotation.
+
+### First things first
+
+Create a folder inside `input` with your sample's name, and copy your two
+FASTQ files into it (from Windows File Explorer, same as before). **It's
+important that they're named the same except for `_1` and `_2`**, for
+example:
+
+```
+input/MySample/MySample_1.fastq.gz
+input/MySample/MySample_2.fastq.gz
+```
+
+### The command
+
+```bash
+./reanotar.sh full -i input/MySample -o outputs/MySample_full -s SampleName -t wgs
+```
+
+- `-t wgs` → indicates it's a whole genome. If instead it's an **exome**
+  (only the coding part of the genome), use `-t wes` and you'll also need
+  to add `-e input/MySample/regions.bed` with the regions BED file — ask
+  the sequencing lab if you don't have it.
+
+### Since it takes a long time, run it "in the background"
+
+So you can close the window or turn off the screen without interrupting
+the process, add this to the end of the command:
+
+```bash
+./reanotar.sh full -i input/MySample -o outputs/MySample_full -s SampleName -t wgs > outputs/log.txt 2>&1 &
+```
+
+This saves everything that happens to a file called `log.txt` inside the
+output folder, and the process keeps running even if you close the
+terminal (though not if you turn off the computer or disconnect the disk).
+
+---
+
+# Step 7 — How do I know if it finished correctly?
+
+**If you used the graphical panel (Step 5):** a notice automatically
+appears on screen when it's done, saying whether it finished successfully
+or stopped early — no need to check anything else by hand. If the notice
+says it failed, click "View log" to see the details.
+
+**If you used the commands (Step 6):** when it finishes correctly, you'll
+see a message on screen like:
+
+```
+==========================================================
+ALTERNATIVE PHASE 4 COMPLETED SUCCESSFULLY.
+Final file: /mnt/f/ReAnote/outputs/.../SampleName.vep.annotated.vcf.gz
+==========================================================
+```
+
+The **final file** with the re-annotation is in the folder you specified
+with `-o` (or the one you chose as the output folder in the panel), and
+you can also view and copy it from Windows File Explorer as usual.
+
+If instead you see red text/the word `ERROR`, or the program stops with a
+message you don't understand, copy **all** the text that appeared on
+screen (or check the full log via "View log" in the panel) and share it
+with whoever is responsible for maintaining ReAnote — it'll be much easier
+for them to help you with that full text in front of them.
+
+---
+
+# Frequently asked questions
+
+### Can I use the disk on several computers?
+
+Yes, that's exactly what it's for. The first time you use it on a new
+computer, repeat from **Step 1**. On later uses on that same computer, you
+only need Steps 2 and 3 (connect the disk and go into the folder, or
+directly the graphical panel from Step 5) — no need to reinstall or
+reconfigure anything.
+
+### I closed the window/terminal halfway through the process, did I lose my work?
+
+**With the graphical panel:** no, the process keeps running even if you
+close the progress window or even the whole panel — reopening
+`Open_ReAnote.bat` detects it automatically and you can resume tracking it
+with "View log" or stop it with "Cancel".
+
+**With the commands:** if you launched the command the normal way (without
+the trailing `&` explained in point 6.3), it does get interrupted. If you
+were in the `full` process (the longest one), you can simply **relaunch
+the exact same command**: the program detects which parts had already
+completed correctly and continues from there, without repeating work
+already done.
+
+### Do I need internet?
+
+No, except the first time the program is used on a brand-new computer (for
+the optional `squashfuse` step, and only if something is missing from the
+disk). The rest of the time it works offline.
+
+### Where do I find more technical detail?
+
+The `README.md` file inside the ReAnote folder contains the full technical
+detail, aimed at whoever will be maintaining the system.
+
+---
+
+# Quick summary (for those who already know how to use it)
+
+**Graphical panel:** go into the `ReAnote` folder on the disk and
+double-click `Open_ReAnote.bat`. Fill out the form and click "Start".
+
+**Via commands:**
+
+```bash
+wsl
+cd /mnt/f/ReAnote          # adjust the letter if it's not f
+
+# VCF in hg38
+./reanotar.sh annotate -i input/FILE.vcf.gz -o outputs/OUTPUT -s SAMPLE
+
+# VCF in hg19
+./reanotar.sh liftover -i input/FILE.vcf.gz -o outputs/OUTPUT -s SAMPLE
+
+# FASTQ (WGS)
+./reanotar.sh full -i input/FOLDER -o outputs/OUTPUT -s SAMPLE -t wgs
+
+# Single step only (e.g. if you already have a BAM and want to skip straight to calling variants)
+./reanotar.sh call -i input/SAMPLE.bam -o outputs/OUTPUT -s SAMPLE -t wgs
+
+# Help for any command
+./reanotar.sh --help
+./reanotar.sh annotate --help
+```

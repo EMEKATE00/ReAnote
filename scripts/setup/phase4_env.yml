@@ -1,0 +1,16 @@
+name: phase4_env
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - htslib
+  - samtools
+  - perl-io-compress
+  - perl-bio-db-hts
+  - perl-dbi
+  - perl-dbd-mysql
+  - whatshap
+  - ensembl-vep=115
+  - vcfanno
+  - bcftools

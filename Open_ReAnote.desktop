@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=ReAnote
+Comment=Open a terminal ready to use ReAnote's variant re-annotation pipeline
+Exec=sh -c 'd="%k"; d="${d%/*}"; [ -x "$d/open_reanote.sh" ] || d=$(ls -d /mnt/*/ReAnote /media/*/ReAnote /media/*/*/ReAnote 2>/dev/null | head -n1); cd "$d" && ./open_reanote.sh'
+Icon=utilities-terminal
+Terminal=false
+Categories=Science;Biology;

@@ -1,0 +1,115 @@
+/* ============================================================
+   ReAnote — User Manual — external stylesheet
+   ============================================================ */
+
+/* ---- General palette and typography ---- */
+:root {
+  --rn-primary: #2c6e9b;
+  --rn-primary-dark: #1f4e70;
+  --rn-accent: #3fa796;
+  --rn-bg-soft: #f6f9fb;
+  --rn-border: #e1e8ee;
+  --rn-warn-bg: #fff8e6;
+  --rn-warn-border: #f0c14b;
+}
+
+body {
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.7;
+  color: #2c3338;
+  background-color: #fbfcfd;
+}
+
+.main-container { max-width: 960px; }
+
+/* ---- Headings: more subdued than the default theme, with a
+   touch of visual identity (accent line under H1s) ---- */
+h1.title {
+  font-size: 2.1em;
+  color: var(--rn-primary-dark);
+  font-weight: 700;
+}
+.subtitle { color: #5a6672; font-weight: 400; }
+
+h1 {
+  font-size: 1.5em;
+  color: var(--rn-primary-dark);
+  margin-top: 2.4em;
+  margin-bottom: 0.9em;
+  padding-bottom: 0.3em;
+  border-bottom: 3px solid var(--rn-accent);
+}
+h2 {
+  font-size: 1.22em;
+  color: var(--rn-primary);
+  margin-top: 1.9em;
+  margin-bottom: 0.6em;
+}
+h3 {
+  font-size: 1.05em;
+  color: #3a4550;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+/* ---- General spacing: more breathing room for paragraphs,
+   lists, and tables (the original reported problem) ---- */
+p { margin-bottom: 1.15em; }
+ul, ol { margin-bottom: 1.25em; }
+li { margin-bottom: 0.45em; }
+table { margin-top: 1em; margin-bottom: 1.5em; }
+hr { border: none; border-top: 1px solid var(--rn-border); margin: 2.4em 0; }
+
+/* ---- Code blocks: "card" look so commands clearly stand out
+   as something meant to be copy-pasted ---- */
+pre {
+  background-color: #f4f7f9 !important;
+  border: 1px solid var(--rn-border);
+  border-left: 4px solid var(--rn-primary);
+  border-radius: 6px;
+  padding: 0.9em 1.1em;
+  margin-top: 0.9em;
+  margin-bottom: 1.5em;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+code { color: var(--rn-primary-dark); }
+pre code { color: inherit; background-color: transparent !important; }
+
+/* ---- Blockquotes/notes (the "> **Tip:**", "> **Not sure...**"
+   blocks) styled as a highlighted note instead of a plain gray quote ---- */
+blockquote {
+  background-color: var(--rn-warn-bg);
+  border-left: 4px solid var(--rn-warn-border);
+  border-radius: 4px;
+  padding: 0.8em 1.3em;
+  margin-top: 1.1em;
+  margin-bottom: 1.6em;
+  color: #5c4a1a;
+}
+blockquote p:last-child { margin-bottom: 0; }
+
+/* ---- The "choose your workflow" table and other tables: colored
+   header and alternating rows ---- */
+table.table {
+  border-collapse: collapse;
+  width: 100%;
+}
+table.table thead th {
+  background-color: var(--rn-primary);
+  color: #ffffff !important;
+  border: none;
+  padding: 0.6em 0.9em;
+}
+table.table td {
+  padding: 0.6em 0.9em;
+  border-bottom: 1px solid var(--rn-border);
+}
+table.table tbody tr:nth-child(odd) { background-color: var(--rn-bg-soft); }
+
+/* ---- Sidebar table of contents (TOC) ---- */
+#TOC { font-size: 0.92em; }
+.tocify-item { padding: 4px 10px !important; }
+.list-group-item.active, .list-group-item.active:hover {
+  background-color: var(--rn-primary) !important;
+  border-color: var(--rn-primary) !important;
+}
